@@ -1,37 +1,34 @@
 class BookmarksController < ApplicationController
-  before_action :set_bookmark, only: :destroy
-  before_action :set_list, only: [:new, :create]
+  # before_action :set_list, only: [:new, :create, :destroy]
 
   def new
+    @list = List.find(params[:list_id])
     @bookmark = Bookmark.new
   end
 
   def create
-    @bookmark = Bookmark.new(bookmark_params)
-    @bookmark.list = @list
-    if @bookmark.save
-      redirect_to list_path(@list)
-    else
-      render :new
-    end
+    @list = List.find(params[:list_id]) # Needs list per list-Id
+    @movie = Movie.find(params[:bookmark][:movie_id]) # Needs movie per movie-id
+    @comment = params[:bookmark][:comment]
+    @bookmark = Bookmark.new(list: @list, movie: @movie, comment: @comment) # Creates new bookmark with those two
+    @bookmark.save # And saves it.
+    redirect_to list_path(@list) # Redirects to list show.html.erb
   end
 
   def destroy
+    @bookmark = Bookmark.find(params[:id])
     @bookmark.destroy
     redirect_to list_path(@bookmark.list), status: :see_other
   end
 
   private
 
-  def bookmark_params
-    params.require(:bookmark).permit(:comment, :movie_id)
-  end
-
-  def set_bookmark
-    @bookmark = Bookmark.find(params[:id])
-  end
-
   def set_list
-    @list = List.find(params[:list_id])
+    @list = List.find(params[:list_id]) # Defines the bookmark by id. Used in methods defined above in before_action
   end
+
+  def bookmark_params
+    params.require(:bookmark).permit(:comment, :movie, :list)
+  end
+
 end
